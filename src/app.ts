@@ -5,6 +5,8 @@ import {
   generalRateLimit,
   authRateLimit,
 } from './config/security.js';
+import oauthRoutes from './routes/oauth.js';
+import googleRoutes from './routes/google.js';
 
 const app = express();
 
@@ -20,6 +22,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Rate limiting strict pour les routes d'authentification
 app.use('/auth', authRateLimit);
 app.use('/oauth', authRateLimit);
+
+// Routes OAuth2
+app.use('/oauth', oauthRoutes);
+
+// Routes Google API
+app.use('/api/google', googleRoutes);
 
 // Route de santé
 app.get('/health', (req, res) => {

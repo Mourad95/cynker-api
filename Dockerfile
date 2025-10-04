@@ -13,8 +13,8 @@ RUN yarn install --frozen-lockfile
 # Copier le code source
 COPY . .
 
-# Construire l'application
-RUN yarn build
+# Construire l'application et vérifier que les fichiers existent
+RUN yarn build && ls -la dist/
 
 # Exposer le port
 EXPOSE 8080
