@@ -19,7 +19,7 @@ help: ## Afficher l'aide
 # Développement local
 dev: ## Démarrer l'API en mode développement (nécessite MongoDB)
 	@echo "🔄 Démarrage de l'API en mode développement..."
-	yarn dev
+	PORT=8085 BASE_URL=http://localhost:8085 yarn dev
 
 build: ## Construire l'API
 	@echo "🔨 Construction de l'API..."

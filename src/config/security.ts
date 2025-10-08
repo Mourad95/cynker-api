@@ -3,15 +3,32 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { env } from './env.js';
 
+/**
+ * Parse les origines CORS autorisées
+ * Supporte les formats : chaîne séparée par virgules ou tableau
+ */
+function parseAllowedOrigins(): string[] {
+  if (Array.isArray(env.CORS_ALLOWED_ORIGINS)) {
+    return env.CORS_ALLOWED_ORIGINS;
+  }
+  
+  if (typeof env.CORS_ALLOWED_ORIGINS === 'string') {
+    return env.CORS_ALLOWED_ORIGINS
+      .split(',')
+      .map(origin => origin.trim())
+      .filter(origin => origin.length > 0);
+  }
+  
+  return ['http://localhost:8085'];
+}
+
 // Configuration CORS avec whitelist
 export const corsOptions = {
   origin: (
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) => {
-    const allowedOrigins = env.CORS_ALLOWED_ORIGINS.split(',').map((origin) =>
-      origin.trim()
-    );
+    const allowedOrigins = parseAllowedOrigins();
 
     // Autoriser les requêtes sans origin (ex: Postman, curl)
     if (!origin) return callback(null, true);

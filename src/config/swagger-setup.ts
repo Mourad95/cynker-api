@@ -1,4 +1,5 @@
 import swaggerUi from 'swagger-ui-express';
+import swaggerJSDoc from 'swagger-jsdoc';
 import { swaggerDefinition } from './swagger.js';
 
 // Configuration Swagger UI
@@ -23,14 +24,14 @@ export const swaggerOptions = {
 };
 
 // Génération de la documentation Swagger à partir des commentaires JSDoc
-export const generateSwaggerDocs = async () => {
-  const swaggerJSDoc = (await import('swagger-jsdoc')).default;
-  
+export const generateSwaggerDocs = () => {
   const options = {
     definition: swaggerDefinition,
     apis: [
-      './src/routes/*.ts',
+        './src/routes/*.ts',
       './src/app.ts',
+      './dist/routes/*.js',
+      './dist/app.js',
     ],
   };
 
@@ -38,8 +39,8 @@ export const generateSwaggerDocs = async () => {
 };
 
 // Middleware pour servir la documentation Swagger
-export const setupSwagger = async (app: any) => {
-  const swaggerDocs = await generateSwaggerDocs();
+export const setupSwagger = (app: any) => {
+  const swaggerDocs = generateSwaggerDocs();
   
   // Route pour la documentation JSON
   app.get('/api-docs.json', (req: any, res: any) => {

@@ -58,6 +58,6 @@ app.get('/health', (req, res) => {
 });
 
 // Configuration de la documentation Swagger
-setupSwagger(app).catch(console.error);
+setupSwagger(app);
 
 export default app;

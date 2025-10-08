@@ -7,8 +7,8 @@ dotenv.config();
 export const env = {
   // Configuration de base
   NODE_ENV: process.env.NODE_ENV || 'development',
-  PORT: Number(process.env.PORT) || 3000,
-  BASE_URL: process.env.BASE_URL || 'http://localhost:3000',
+  PORT: Number(process.env.PORT),
+  BASE_URL: process.env.BASE_URL ,
 
   // Configuration de base de données
   MONGODB_URI: process.env.MONGODB_URI!,
@@ -18,10 +18,15 @@ export const env = {
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY!,
 
   // Configuration CORS
-  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  CORS_ALLOWED_ORIGINS:
-    process.env.CORS_ALLOWED_ORIGINS ||
-    'http://localhost:3000,http://localhost:8080',
+  
+  CORS_ORIGIN: process.env.CORS_ALLOWED_ORIGINS
+    ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+    : [
+        'http://localhost:8085',
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:8080',
+      ],
 
   // Configuration rate limiting
   RATE_LIMIT_WINDOW_MS: Number(process.env.RATE_LIMIT_WINDOW_MS) || 900000, // 15 minutes
