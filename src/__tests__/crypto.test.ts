@@ -140,8 +140,8 @@ describe('Crypto Utils', () => {
       const originalText = 'Test with key rotation';
       const encrypted = encrypt(originalText);
 
-      // Le déchiffrement devrait fonctionner même si on force l'utilisation de la clé précédente
-      const decrypted = decrypt(encrypted, true);
+      // Le déchiffrement devrait fonctionner
+      const decrypted = decrypt(encrypted);
       expect(decrypted).toBe(originalText);
     });
   });

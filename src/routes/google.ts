@@ -24,7 +24,11 @@ router.post('/gmail/send', async (req, res) => {
 
     res.json({ success: true, message: 'Email envoyé avec succès' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -44,7 +48,11 @@ router.get('/gmail/emails/:userId', async (req, res) => {
 
     res.json({ emails });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -60,7 +68,11 @@ router.get('/gmail/email/:userId/:messageId', async (req, res) => {
 
     res.json({ email: emailContent });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -80,7 +92,11 @@ router.patch('/gmail/mark/:userId/:messageId', async (req, res) => {
       message: `Email marqué comme ${read ? 'lu' : 'non lu'}`,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -106,7 +122,11 @@ router.get('/sheets/:spreadsheetId/:range', async (req, res) => {
 
     res.json({ data });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -127,7 +147,11 @@ router.put('/sheets/:spreadsheetId/:range', async (req, res) => {
 
     res.json({ success: true, message: 'Données écrites avec succès' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -147,7 +171,11 @@ router.post('/sheets/create', async (req, res) => {
 
     res.json({ success: true, ...result });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -171,7 +199,11 @@ router.get('/sheets/metadata/:spreadsheetId', async (req, res) => {
 
     res.json({ metadata });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -194,7 +226,11 @@ router.post('/sheets/:spreadsheetId/add-sheet', async (req, res) => {
 
     res.json({ success: true, message: 'Feuille ajoutée avec succès' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -221,7 +257,11 @@ router.post('/calendar/events', async (req, res) => {
 
     res.json({ success: true, event: createdEvent });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -248,7 +288,11 @@ router.get('/calendar/events/:calendarId', async (req, res) => {
 
     res.json({ events });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -274,7 +318,11 @@ router.put('/calendar/events/:calendarId/:eventId', async (req, res) => {
 
     res.json({ success: true, event: updatedEvent });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -295,7 +343,11 @@ router.delete('/calendar/events/:calendarId/:eventId', async (req, res) => {
 
     res.json({ success: true, message: 'Événement supprimé avec succès' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -315,7 +367,11 @@ router.get('/calendar/calendars', async (req, res) => {
 
     res.json({ calendars });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 
@@ -340,7 +396,11 @@ router.post('/calendar/create', async (req, res) => {
 
     res.json({ success: true, calendar });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Une erreur inconnue est survenue' });
+    }
   }
 });
 

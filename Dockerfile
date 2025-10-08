@@ -17,11 +17,11 @@ COPY . .
 RUN yarn build && ls -la dist/
 
 # Exposer le port
-EXPOSE 8080
+EXPOSE 8085
 
 # Variables d'environnement par défaut
 ENV NODE_ENV=production
-ENV PORT=8080
+ENV PORT=8085
 
 # Commande de démarrage
 CMD ["yarn", "start"]

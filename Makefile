@@ -3,7 +3,7 @@
 .PHONY: help dev build start stop clean docker-mongo docker-api docker-up docker-down logs test lint
 
 # Variables
-API_PORT := 8080
+API_PORT := 8085
 DOCKER_COMPOSE := docker-compose
 
 # Charger les variables d'environnement

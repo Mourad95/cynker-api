@@ -2,6 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { GoogleOAuth2 } from '../utils/oauth/google.js';
 import { ScopeValidator } from '../utils/oauth/scopeValidator.js';
+import { AuthService } from '../services/auth.js';
 
 const router = express.Router();
 
@@ -9,8 +10,44 @@ const router = express.Router();
 const stateStore = new Map<string, { userId: string; timestamp: number }>();
 
 /**
- * Redirection vers Google OAuth2
- * GET /oauth/google
+ * @swagger
+ * /oauth/google:
+ *   get:
+ *     summary: Initiation de la connexion OAuth2 Google
+ *     description: Génère l'URL d'autorisation Google et un état CSRF pour sécuriser le processus
+ *     tags: [OAuth2]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur pour lier la connexion Google
+ *         example: "507f1f77bcf86cd799439011"
+ *     responses:
+ *       200:
+ *         description: URL d'autorisation générée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OAuthInitResponse'
+ *             example:
+ *               authUrl: "https://accounts.google.com/o/oauth2/v2/auth?client_id=..."
+ *               state: "abc123def456ghi789"
+ *       400:
+ *         description: userId manquant
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "userId requis"
+ *       500:
+ *         description: Erreur interne du serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/google', (req, res) => {
   try {
@@ -58,8 +95,75 @@ router.get('/google', (req, res) => {
 });
 
 /**
- * Callback Google OAuth2
- * GET /oauth/callback/google
+ * @swagger
+ * /oauth/callback/google:
+ *   get:
+ *     summary: Callback OAuth2 Google
+ *     description: Traite la réponse de Google après autorisation et crée/met à jour l'utilisateur
+ *     tags: [OAuth2]
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Code d'autorisation fourni par Google
+ *       - in: query
+ *         name: state
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: État CSRF pour la sécurité
+ *       - in: query
+ *         name: error
+ *         schema:
+ *           type: string
+ *         description: Code d'erreur si l'autorisation a échoué
+ *     responses:
+ *       200:
+ *         description: Connexion Google réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *             example:
+ *               success: true
+ *               user:
+ *                 _id: "507f1f77bcf86cd799439011"
+ *                 email: "user@gmail.com"
+ *                 firstName: "John"
+ *                 lastName: "Doe"
+ *                 authProvider: "google"
+ *                 googleId: "123456789012345678901"
+ *                 emailVerified: true
+ *                 isActive: true
+ *               token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *               message: "Connexion Google réussie"
+ *       400:
+ *         description: Erreur dans le processus OAuth2
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               missing_params:
+ *                 summary: Paramètres manquants
+ *                 value:
+ *                   error: "Code et state requis"
+ *               invalid_state:
+ *                 summary: État invalide
+ *                 value:
+ *                   error: "État invalide ou expiré"
+ *               oauth_error:
+ *                 summary: Erreur OAuth2
+ *                 value:
+ *                   error: "Erreur OAuth2: access_denied"
+ *       500:
+ *         description: Erreur interne du serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/callback/google', async (req, res) => {
   try {
@@ -88,13 +192,23 @@ router.get('/callback/google', async (req, res) => {
     // Récupère les informations utilisateur
     const userInfo = await GoogleOAuth2.getUserInfo(tokens.access_token);
 
-    // Sauvegarde les tokens
-    const scopes = tokens.scope.split(' ');
-    await GoogleOAuth2.saveTokens(stateData.userId, tokens, scopes);
+    // Créer ou mettre à jour l'utilisateur avec le service d'authentification
+    const authResult = await AuthService.handleGoogleAuth(userInfo);
+
+    if (!authResult.success) {
+      return res.status(400).json({
+        error: authResult.message || 'Erreur lors de la création du compte',
+      });
+    }
+
+    // Sauvegarde les tokens OAuth
+    const scopes = (tokens as any).scope.split(' ');
+    await GoogleOAuth2.saveTokens((authResult.user as any)._id.toString(), tokens, scopes);
 
     res.json({
       success: true,
-      user: userInfo,
+      user: authResult.user,
+      token: authResult.token,
       message: 'Connexion Google réussie',
     });
   } catch (error) {
@@ -104,8 +218,51 @@ router.get('/callback/google', async (req, res) => {
 });
 
 /**
- * Déconnexion Google
- * DELETE /oauth/google
+ * @swagger
+ * /oauth/google:
+ *   delete:
+ *     summary: Déconnexion Google
+ *     description: Supprime les tokens OAuth2 Google de l'utilisateur
+ *     tags: [OAuth2]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: ID de l'utilisateur
+ *                 example: "507f1f77bcf86cd799439011"
+ *             required:
+ *               - userId
+ *     responses:
+ *       200:
+ *         description: Déconnexion réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Déconnexion Google réussie"
+ *       400:
+ *         description: userId manquant
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur interne du serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete('/google', async (req, res) => {
   try {
@@ -130,8 +287,51 @@ router.delete('/google', async (req, res) => {
 });
 
 /**
- * Vérifie le statut de connexion Google
- * GET /oauth/google/status
+ * @swagger
+ * /oauth/google/status:
+ *   get:
+ *     summary: Statut de connexion Google
+ *     description: Vérifie si l'utilisateur est connecté à Google et l'état de ses tokens
+ *     tags: [OAuth2]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur
+ *         example: "507f1f77bcf86cd799439011"
+ *     responses:
+ *       200:
+ *         description: Statut de connexion récupéré
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OAuthStatusResponse'
+ *             examples:
+ *               connected:
+ *                 summary: Utilisateur connecté
+ *                 value:
+ *                   connected: true
+ *                   isValid: true
+ *                   expiresAt: "2024-01-15T10:30:00.000Z"
+ *                   scope: ["https://www.googleapis.com/auth/gmail.send"]
+ *               not_connected:
+ *                 summary: Utilisateur non connecté
+ *                 value:
+ *                   connected: false
+ *       400:
+ *         description: userId manquant
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur interne du serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/google/status', async (req, res) => {
   try {

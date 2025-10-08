@@ -19,17 +19,13 @@ function getKeyFromBase64(keyBase64: string): Buffer {
 }
 
 /**
- * Obtient la clé de chiffrement (actuelle ou précédente)
+ * Obtient la clé de chiffrement
  */
-function getEncryptionKey(usePreviousKey = false): Buffer {
-  const keyBase64 = usePreviousKey
-    ? env.ENCRYPTION_KEY_PREVIOUS
-    : env.ENCRYPTION_KEY_CURRENT;
+function getEncryptionKey(): Buffer {
+  const keyBase64 = env.ENCRYPTION_KEY;
 
   if (!keyBase64) {
-    throw new Error(
-      `Clé de chiffrement ${usePreviousKey ? 'précédente' : 'actuelle'} non définie`
-    );
+    throw new Error('Clé de chiffrement non définie');
   }
 
   const key = getKeyFromBase64(keyBase64);
@@ -76,16 +72,13 @@ export function encrypt(plaintext: string): EncryptedData {
  * @param usePreviousKey - Utiliser la clé précédente
  * @returns Le texte déchiffré
  */
-export function decrypt(
-  encryptedData: EncryptedData,
-  usePreviousKey = false
-): string {
+export function decrypt(encryptedData: EncryptedData): string {
   if (!encryptedData || !encryptedData.data || !encryptedData.iv) {
     throw new Error('Données chiffrées invalides');
   }
 
   try {
-    const key = getEncryptionKey(usePreviousKey);
+    const key = getEncryptionKey();
     const iv = Buffer.from(encryptedData.iv, 'base64');
     const decipher = createDecipheriv('aes-256-cbc', key, iv);
 
@@ -94,14 +87,6 @@ export function decrypt(
 
     return decrypted;
   } catch (error) {
-    // Si le déchiffrement échoue avec la clé actuelle, essayer avec la clé précédente
-    if (!usePreviousKey && env.ENCRYPTION_KEY_PREVIOUS) {
-      try {
-        return decrypt(encryptedData, true);
-      } catch (previousError) {
-        throw new Error(`Erreur de déchiffrement avec les deux clés: ${error}`);
-      }
-    }
     throw new Error(`Erreur de déchiffrement: ${error}`);
   }
 }
