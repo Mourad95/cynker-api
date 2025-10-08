@@ -87,6 +87,11 @@ Cette API permet l'authentification des utilisateurs via deux méthodes :
             description: 'Nom de l\'utilisateur',
             example: 'Doe',
           },
+          company: {
+            type: 'string',
+            description: 'Nom de l\'entreprise',
+            example: 'Acme Corp',
+          },
           authProvider: {
             type: 'string',
             enum: ['local', 'google'],
@@ -202,6 +207,11 @@ Cette API permet l'authentification des utilisateurs via deux méthodes :
             type: 'string',
             description: 'Nom',
             example: 'Doe',
+          },
+          company: {
+            type: 'string',
+            description: 'Nom de l\'entreprise',
+            example: 'Acme Corp',
           },
         },
         required: ['email', 'password', 'firstName', 'lastName'],

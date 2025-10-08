@@ -21,6 +21,7 @@ const router = express.Router();
  *             password: "MySecure123!"
  *             firstName: "John"
  *             lastName: "Doe"
+ *             company: "Acme Corp"
  *     responses:
  *       201:
  *         description: Inscription réussie
@@ -35,13 +36,22 @@ const router = express.Router();
  *                 email: "user@example.com"
  *                 firstName: "John"
  *                 lastName: "Doe"
+ *                 company: "Acme Corp"
  *                 authProvider: "local"
  *                 emailVerified: false
  *                 isActive: true
  *               token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *               message: "Inscription réussie"
  *       400:
- *         description: Erreur de validation ou utilisateur existant
+ *         description: Erreur de validation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Tous les champs sont requis"
+ *       409:
+ *         description: Utilisateur existant
  *         content:
  *           application/json:
  *             schema:
@@ -92,6 +102,12 @@ router.post('/register', async (req, res) => {
     });
 
     if (!result.success) {
+      // Retourner 409 si l'utilisateur existe déjà
+      if (result.message?.includes('existe déjà')) {
+        return res.status(409).json({
+          error: result.message,
+        });
+      }
       return res.status(400).json({
         error: result.message,
       });

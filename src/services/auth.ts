@@ -20,6 +20,7 @@ export interface RegisterData {
   password: string;
   firstName: string;
   lastName: string;
+  company?: string;
 }
 
 export interface GoogleUserData {
@@ -68,6 +69,15 @@ export class AuthService {
       };
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
+      
+      // Gérer les erreurs de contrainte unique MongoDB
+      if (error instanceof Error && error.message.includes('duplicate key')) {
+        return {
+          success: false,
+          message: 'Un utilisateur avec cet email existe déjà',
+        };
+      }
+      
       return {
         success: false,
         message: 'Erreur lors de l\'inscription',

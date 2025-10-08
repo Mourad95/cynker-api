@@ -29,7 +29,7 @@ services:
       NODE_ENV: development
       PORT: 8085
       MONGODB_URI: mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-password123}@mongodb:27017/${MONGO_DATABASE:-cynker-api}?authSource=${MONGO_AUTH_SOURCE:-admin}
-      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001
+      CORS_ALLOWED_ORIGINS: http://localhost:8085,http://localhost:3000,http://localhost:3001
       SESSION_SECRET: docker_session_secret_ultra_long_et_securise_32_caracteres_minimum
       JWT_SECRET: docker_jwt_secret_ultra_long_et_securise_32_caracteres_minimum
       RUN_TOKEN_TTL_SECONDS: 3600

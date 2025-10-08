@@ -18,14 +18,15 @@ export const env = {
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY!,
 
   // Configuration CORS
-  
-  CORS_ORIGIN: process.env.CORS_ALLOWED_ORIGINS
+  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:8085',
+  CORS_ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS
     ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
     : [
         'http://localhost:8085',
         'http://localhost:3000',
         'http://localhost:3001',
         'http://localhost:8080',
+        'http://localhost:8081',
       ],
 
   // Configuration rate limiting

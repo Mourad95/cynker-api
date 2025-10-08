@@ -6,6 +6,7 @@ export interface IUser extends Document {
   password?: string; // Optionnel pour les utilisateurs OAuth
   firstName: string;
   lastName: string;
+  company?: string; // Nom de l'entreprise
   isActive: boolean;
   authProvider: 'local' | 'google'; // Type d'authentification
   googleId?: string; // ID Google pour les utilisateurs OAuth
@@ -65,6 +66,11 @@ const userSchema = new Schema<IUser>(
       trim: true,
       maxlength: [50, 'Le nom ne peut pas dépasser 50 caractères'],
     },
+    company: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Le nom de l\'entreprise ne peut pas dépasser 100 caractères'],
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -99,7 +105,7 @@ const userSchema = new Schema<IUser>(
 );
 
 // Index pour optimiser les requêtes
-userSchema.index({ email: 1 });
+userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ isActive: 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ googleId: 1 });
@@ -143,6 +149,7 @@ userSchema.statics.createLocalUser = function(userData: {
   password: string;
   firstName: string;
   lastName: string;
+  company?: string;
 }) {
   return this.create({
     ...userData,
@@ -157,6 +164,7 @@ userSchema.statics.createGoogleUser = function(userData: {
   lastName: string;
   googleId: string;
   profilePicture?: string;
+  company?: string;
 }) {
   return this.create({
     ...userData,

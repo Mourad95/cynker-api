@@ -8,18 +8,13 @@ import { env } from './env.js';
  * Supporte les formats : chaîne séparée par virgules ou tableau
  */
 function parseAllowedOrigins(): string[] {
-  if (Array.isArray(env.CORS_ALLOWED_ORIGINS)) {
-    return env.CORS_ALLOWED_ORIGINS;
-  }
-  
-  if (typeof env.CORS_ALLOWED_ORIGINS === 'string') {
-    return env.CORS_ALLOWED_ORIGINS
-      .split(',')
-      .map(origin => origin.trim())
-      .filter(origin => origin.length > 0);
-  }
-  
-  return ['http://localhost:8085'];
+  // Configuration directe pour debug
+  return [
+    'http://localhost:8085',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:8080'
+  ];
 }
 
 // Configuration CORS avec whitelist
@@ -29,11 +24,13 @@ export const corsOptions = {
     callback: (err: Error | null, allow?: boolean) => void
   ) => {
     const allowedOrigins = parseAllowedOrigins();
+    console.log('🔍 Origin reçue:', origin);
+    console.log('🔍 Origines autorisées:', allowedOrigins);
 
     // Autoriser les requêtes sans origin (ex: Postman, curl)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins?.includes(origin)) {
       callback(null, true);
     } else {
       console.warn(`🚫 CORS: Origine non autorisée: ${origin}`);
