@@ -8,6 +8,8 @@ import {
 import oauthRoutes from './routes/oauth.js';
 import googleRoutes from './routes/google.js';
 import authRoutes from './routes/auth.js';
+import n8nRoutes from './routes/n8n.js';
+import n8nGoogleRoutes from './routes/n8n-google.js';
 import { setupSwagger } from './config/swagger-setup.js';
 
 const app = express();
@@ -30,6 +32,12 @@ app.use('/oauth', oauthRoutes);
 
 // Routes Google API
 app.use('/api/google', googleRoutes);
+
+// Routes N8N
+app.use('/n8n', n8nRoutes);
+
+// Routes N8N-Google Integration
+app.use('/n8n/google', n8nGoogleRoutes);
 
 // Route de santé
 /**

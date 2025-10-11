@@ -421,5 +421,9 @@ Cette API permet l'authentification des utilisateurs via deux méthodes :
       name: 'Health',
       description: 'Routes de santé et monitoring',
     },
+    {
+      name: 'N8N',
+      description: 'Monitoring et contrôle des automatisations N8N',
+    },
   ],
 };

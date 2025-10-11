@@ -97,28 +97,29 @@ router.get('/google', (req, res) => {
 /**
  * @swagger
  * /oauth/callback/google:
- *   get:
+ *   post:
  *     summary: Callback OAuth2 Google
  *     description: Traite la réponse de Google après autorisation et crée/met à jour l'utilisateur
  *     tags: [OAuth2]
- *     parameters:
- *       - in: query
- *         name: code
- *         required: true
- *         schema:
- *           type: string
- *         description: Code d'autorisation fourni par Google
- *       - in: query
- *         name: state
- *         required: true
- *         schema:
- *           type: string
- *         description: État CSRF pour la sécurité
- *       - in: query
- *         name: error
- *         schema:
- *           type: string
- *         description: Code d'erreur si l'autorisation a échoué
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: Code d'autorisation fourni par Google
+ *               state:
+ *                 type: string
+ *                 description: État CSRF pour la sécurité
+ *               error:
+ *                 type: string
+ *                 description: Code d'erreur si l'autorisation a échoué
+ *             required:
+ *               - code
+ *               - state
  *     responses:
  *       200:
  *         description: Connexion Google réussie
@@ -165,6 +166,60 @@ router.get('/google', (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+// Route POST pour le callback OAuth (utilisée par le frontend)
+router.post('/callback/google', async (req, res) => {
+  try {
+    const { code, state, error } = req.body;
+
+    if (error) {
+      return res.status(400).json({ error: `Erreur OAuth2: ${error}` });
+    }
+
+    if (!code || !state) {
+      return res.status(400).json({ error: 'Code et state requis' });
+    }
+
+    // Vérifie l'état pour la sécurité CSRF
+    const stateData = stateStore.get(state as string);
+    if (!stateData) {
+      return res.status(400).json({ error: 'État invalide ou expiré' });
+    }
+
+    // Supprime l'état utilisé
+    stateStore.delete(state as string);
+
+    // Échange le code contre des tokens
+    const tokens = await GoogleOAuth2.exchangeCodeForTokens(code as string);
+
+    // Récupère les informations utilisateur
+    const userInfo = await GoogleOAuth2.getUserInfo(tokens.access_token);
+
+    // Créer ou mettre à jour l'utilisateur avec le service d'authentification
+    const authResult = await AuthService.handleGoogleAuth(userInfo);
+
+    if (!authResult.success) {
+      return res.status(400).json({
+        error: authResult.message || 'Erreur lors de la création du compte',
+      });
+    }
+
+    // Sauvegarde les tokens OAuth
+    const scopes = (tokens as any).scope.split(' ');
+    await GoogleOAuth2.saveTokens((authResult.user as any)._id.toString(), tokens, scopes);
+
+    res.json({
+      success: true,
+      user: authResult.user,
+      token: authResult.token,
+      message: 'Connexion Google réussie',
+    });
+  } catch (error) {
+    console.error('Erreur callback Google:', error);
+    res.status(500).json({ error: 'Erreur lors de la connexion Google' });
+  }
+});
+
+// Route GET pour la compatibilité avec les redirections directes de Google
 router.get('/callback/google', async (req, res) => {
   try {
     const { code, state, error } = req.query;
@@ -212,8 +267,8 @@ router.get('/callback/google', async (req, res) => {
       message: 'Connexion Google réussie',
     });
   } catch (error) {
-    console.error('Erreur callback Google:', error);
-    res.status(500).json({ error: 'Erreur lors de la connexion Google' });
+    console.error('Erreur callback OAuth:', error);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
